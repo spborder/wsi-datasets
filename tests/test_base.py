@@ -20,8 +20,11 @@ def main():
 
     test_slide = WSI(slide_filepath=slide_path, annotations=ann_path)
     print(f"{len(test_slide)=}")
+    slide_map = test_slide.explore()
+    slide_map.save("./example_data/histology_image_map.html")
+    test_slide.start_tileserver()
 
-    wsi_dataset = WSIDataLoader(slides=[test_slide])
+    wsi_dataset = WSIDataset(slides=[test_slide])
 
     print(wsi_dataset)
     print(len(wsi_dataset))

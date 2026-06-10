@@ -16,6 +16,7 @@ from wsi_datasets.classification_dataloader import WSIClassificationDataset
 
 from torch.utils.data import DataLoader
 
+# See large-image documentation for installation instructions with other slide formats
 slide_path = '/path/to/wsi.tiff'
 wsi = WSI(slide_filepath = slide_path, attr_kwargs = {'test_label': 'label'})
 

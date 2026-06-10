@@ -10,6 +10,7 @@ import random
 from typing import Callable
 from uuid import uuid4
 
+import folium
 import geopandas as gpd
 import large_image
 import numpy as np
@@ -71,14 +72,37 @@ class WSI:
             else:
                 self.geos = pd.concat([self.geos, new_geos], axis=0, ignore_index=True)
 
-    def explore(self, host: str = "0.0.0.0", port: int = 8000):
+    def explore(self, host: str = "0.0.0.0", port: int = 8000, **explore_kwargs):
         # Interactive visualization of slide and annotations
-        # TODO: This doesn't quite work with the running tileserver. There might be
-        # some other settings required (tile size, max zoom, etc.)
-        return self.geos.explore(
+        print(
+            "Firefox settings will block CORS requests to the tileserver without a proxy. Tested with Chrome."
+        )
+        image_metadata = self.tile_source.getMetadata()
+        base_dims = [
+            image_metadata["sizeX"] / (2 ** (image_metadata["levels"] - 1)),
+            image_metadata["sizeY"] / (2 ** (image_metadata["levels"] - 1)),
+        ]
+        x_scale = base_dims[0] / image_metadata["sizeX"]
+        y_scale = -(base_dims[1] / image_metadata["sizeY"])
+
+        # Unsure why these adjustments are needed. Maybe there is some internal coordinates rounding step performed
+        # when creating an interactive map?
+        x_scale += 0.004
+        y_scale += -0.004
+        # Format for affine transform is [a,b,d,e,xoff,yoff]
+        # see: https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform
+        viz_geos = self.geos.affine_transform([x_scale, 0, 0, y_scale, 0, 0])
+        map = viz_geos.explore(**explore_kwargs, crs="Simple", zoom_start=0)
+        folium.TileLayer(
             tiles=f"http://{host}:{port}/{self._id}/tiles/{{z}}/{{x}}/{{y}}.png",
             attr=self.filepath,
-        )
+            name=self.filepath.split(os.sep)[-1],
+            max_zoom=image_metadata["levels"] - 1,
+            min_zoom=0,
+        ).add_to(map)
+        folium.LayerControl().add_to(map)
+
+        return map
 
     def start_tileserver(self, host="0.0.0.0", port=8000):
         from tileserver import TileServer
