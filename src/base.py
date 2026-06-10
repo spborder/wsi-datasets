@@ -130,7 +130,15 @@ class WSIDataset:
         # Placeholder for some type of ground truth information
         target = 0
 
-        return self.slides[self.slide_idx][self.tile_idx]["tile"], target
+        # Applying image & target transforms
+        image = self.slides[self.slide_idx][self.tile_idx]["tile"]
+        for transform in self.image_transforms:
+            image = transform(image)
+
+        for transform in self.target_transforms:
+            target = transform(target)
+
+        return image, target
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.slides)} slides ({self.total_tiles} tiles)"

@@ -68,4 +68,11 @@ class WSISegmentationDataset(WSIDataset):
                 out_shape=(next_tile_object["height"], next_tile_object["width"]),
             )
 
-        return next_tile_object["tile"], mask
+        # Applying image and target transforms
+        image = next_tile_object["tile"]
+        for transform in self.image_transforms:
+            image = transform(image)
+        for transform in self.target_transforms:
+            mask = transform(mask)
+
+        return image, mask

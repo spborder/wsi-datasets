@@ -33,6 +33,7 @@ class DynamicTileLabelWSI(WSI):
         return tile_object, tile_attrs
 
     def _get_tile_attr(self, tile_object):
+        # tile_object here is a dictionary containing information about where the tile is located in the slide
         raise NotImplementedError
 
 
@@ -58,6 +59,7 @@ class WSIClassificationDataset(WSIDataset):
         )
 
     def __getitem__(self, idx: int) -> tuple:
+        # This step would have applied all the image/target transforms already
         tile, target = super().__getitem__(idx)
 
         if not isinstance(self.slides[self.slide_idx], DynamicTileLabelWSI):
